@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能数据分析 Agent</title>
+<!-- 引入 Markdown 渲染库 -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  :root {
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --bg: #f3f4f6;
+    --surface: #ffffff;
+    --text-main: #1f2937;
+    --text-light: #6b7280;
+    --border: #e5e7eb;
+  }
+  
+  * { box-sizing: border-box; }
+
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+    background-color: var(--bg); 
+    color: var(--text-main); 
+    margin: 0; 
+    padding: 40px 20px; 
+    line-height: 1.6;
+  }
+
+  .container { 
+    max-width: 1000px; 
+    margin: 0 auto; 
+  }
+
+  /* 顶部标题区 */
+  .header { 
+    text-align: center; 
+    margin-bottom: 30px; 
+  }
+  .header h1 { 
+    font-size: 2.2rem; 
+    margin: 0 0 10px; 
+    background: linear-gradient(90deg, #4f46e5, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header p { 
+    color: var(--text-light); 
+    font-size: 1.1rem; 
+    margin: 0; 
+  }
+
+  /* 控制面板卡片 */
+  .control-panel { 
+    background: var(--surface); 
+    padding: 24px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
+    margin-bottom: 30px; 
+  }
+  
+  .file-input-wrapper { 
+    margin-bottom: 20px; 
+    padding: 20px; 
+    border: 2px dashed var(--border); 
+    border-radius: 8px; 
+    text-align: center; 
+    transition: all 0.2s;
+  }
+  .file-input-wrapper:hover { border-color: var(--primary); }
+  input[type=file] { color: var(--text-light); }
+
+  textarea { 
+    width: 100%; 
+    height: 100px; 
+    padding: 12px; 
+    border: 1px solid var(--border); 
+    border-radius: 8px; 
+    font-size: 15px; 
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { 
+    outline: none; 
+    border-color: var(--primary); 
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); 
+  }
+
+  button { 
+    width: 100%;
+    padding: 14px; 
+    font-size: 16px; 
+    font-weight: 600;
+    color: white; 
+    background: linear-gradient(135deg, var(--primary), #8b5cf6); 
+    border: none; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    transition: transform 0.1s, opacity 0.2s;
+    margin-top: 15px;
+  }
+  button:hover { opacity: 0.9; transform: translateY(-1px); }
+  button:disabled { background: #9ca3af; cursor: not-allowed; transform: none; }
+
+  #status { 
+    text-align: center; 
+    margin-top: 15px; 
+    font-weight: 500; 
+    color: var(--primary); 
+    min-height: 24px;
+  }
+
+  /* 结果展示区 */
+  .result-container {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Markdown 报告样式 */
+  .report-card { 
+    background: var(--surface); 
+    padding: 40px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+  }
+  
+  /* 针对渲染后的 Markdown 进行排版 */
+  .markdown-body h1 { font-size: 1.8rem; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-top: 0; }
+  .markdown-body h2 { font-size: 1.4rem; margin-top: 30px; color: #111827; }
+  .markdown-body h3 { font-size: 1.2rem; margin-top: 20px; color: #374151; }
+  .markdown-body p { margin: 12px 0; }
+  .markdown-body ul, .markdown-body ol { padding-left: 20px; margin: 12px 0; }
+  .markdown-body li { margin-bottom: 6px; }
+  .markdown-body strong { color: var(--primary); }
+  .markdown-body blockquote { 
+    border-left: 4px solid var(--primary); 
+    background: #f8fafc; 
+    margin: 0; 
+    padding: 10px 20px; 
+    color: var(--text-light); 
+    border-radius: 0 8px 8px 0; 
+  }
+  .markdown-body table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95rem; }
+  .markdown-body th, .markdown-body td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+  .markdown-body th { background-color: #f9fafb; font-weight: 600; }
+  .markdown-body tr:nth-child(even) { background-color: #f9fafb; }
+  .markdown-body code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.9em; }
+  .markdown-body pre { background: #1e293b; color: #f8fafc; padding: 16px; border-radius: 8px; overflow-x: auto; }
+  .markdown-body pre code { background: transparent; color: inherit; padding: 0; }
+
+  /* 图表区 */
+  .gallery-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 40px 0 20px;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+  }
+  .gallery-title::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 20px;
+    background: var(--primary);
+    margin-right: 10px;
+    border-radius: 2px;
+  }
+  
+  .gallery-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); 
+    gap: 20px; 
+  }
+  .gallery-grid img { 
+    width: 100%; 
+    height: auto;
+    border-radius: 10px; 
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+    border: 1px solid var(--border);
+    background: #fff;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>智能数据分析 Agent</h1>
+    <p>上传 CSV，自然语言驱动自动统计与计量分析（由 DeepSeek 驱动）</p>
+  </div>
+
+  <div class="control-panel">
+    <div class="file-input-wrapper">
+      <input type="file" id="csv" accept=".csv">
+    </div>
+    <textarea id="query" placeholder="请输入您的分析需求...&#10;例如：做收入对消费的 OLS 回归，并检验异方差。"></textarea>
+    <button id="run">🚀 开始分析</button>
+    <div id="status"></div>
+  </div>
+
+  <div class="result-container" id="result">
+    <!-- 报告 -->
+    <div class="report-card markdown-body" id="report"></div>
+    
+    <!-- 图表 -->
+    <div id="gallery-section" style="display: none;">
+      <div class="gallery-title">生成的可视化图表</div>
+      <div class="gallery-grid" id="gallery"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = "";
+
+document.getElementById("run").onclick = async () => {
+  const fileInput = document.getElementById("csv");
+  const query = document.getElementById("query").value.trim();
+  const statusEl = document.getElementById("status");
+  const resultContainer = document.getElementById("result");
+  const reportEl = document.getElementById("report");
+  const gallerySection = document.getElementById("gallery-section");
+  const galleryEl = document.getElementById("gallery");
+  const btn = document.getElementById("run");
+
+  if (!fileInput.files.length) { statusEl.textContent = "⚠️ 请先选择 CSV 文件"; return; }
+  if (!query) { statusEl.textContent = "⚠️ 请输入分析需求"; return; }
+
+  const fd = new FormData();
+  fd.append("file", fileInput.files[0]);
+  fd.append("query", query);
+
+  statusEl.textContent = "⏳ 正在分析中，这可能需要几十秒，请稍候...";
+  resultContainer.style.display = "none";
+  reportEl.innerHTML = "";
+  galleryEl.innerHTML = "";
+  gallerySection.style.display = "none";
+  btn.disabled = true;
+
+  try {
+    const resp = await fetch(`${API_BASE}/api/analyze`, { method: "POST", body: fd });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    // 使用 marked 将 Markdown 渲染为 HTML
+    reportEl.innerHTML = marked.parse(data.report || "（无报告内容）");
+    resultContainer.style.display = "block";
+
+    // 渲染图片
+    if (data.images && data.images.length > 0) {
+      gallerySection.style.display = "block";
+      data.images.forEach(src => {
+        const img = document.createElement("img");
+        img.src = src.startsWith("http") ? src : API_BASE + src;
+        img.loading = "lazy"; // 开启懒加载
+        galleryEl.appendChild(img);
+      });
+    }
+
+    statusEl.textContent = "✅ 分析完成！";
+  } catch (e) {
+    statusEl.textContent = "❌ 请求失败：" + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+};
+</script>
+</body>
+</html>

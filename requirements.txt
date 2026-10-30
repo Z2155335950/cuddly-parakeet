@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+pandas
+numpy
+scipy
+statsmodels
+seaborn
+matplotlib
+langgraph
+langchain-openai
